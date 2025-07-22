@@ -18,7 +18,7 @@ All responses are JSON objects containing necessary metadata and URLs for access
 ### Install Dependencies
 
 ```bash
-git clone https://github.com/medo-younes/canada-lidar
+git clone https://github.com/medo-younes/py-canlidar
 cd canada-lidar
 conda create -f environment.yml
 ```
