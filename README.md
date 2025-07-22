@@ -19,34 +19,9 @@ All responses are JSON objects containing necessary metadata and URLs for access
 
 ```bash
 git clone https://github.com/medo-younes/py-canlidar
-cd canada-lidar
+cd py-canlidar
 conda create -f environment.yml
 ```
-
-### JSON Schema
-
-All queries return a standard JSON object with the schema shown below. Users can then use the query object to integrate into other applications or to simply download with PyCanLiDAR's downloading functionalities.
-
-| Key Name | Data Type | Description |
-|----------|-----------|-------------|
-| query_area_m2 | np.float64 | Total area of the query region in square meters |
-| query_area_km2 | np.float64 | Total area of the query region in square kilometers |
-| years | list[int] | Years for which LiDAR data is available |
-| file_count | int | Number of LiDAR files found for the query |
-| tile_count | int | Number of LiDAR tiles covering the query area |
-| tile_ids | numpy.ndarray | Array of unique tile identifiers |
-| project_names | numpy.ndarray | Array of project names associated with the LiDAR data |
-| city | str | City name where the query location is situated |
-| address | str | Full address of the query location |
-| urls | list[str] | List of URLs to download the LiDAR point cloud files |
-| bbox | numpy.ndarray | Bounding box coordinates [min_x, min_y, max_x, max_y] |
-| bbox_area_m2 | np.float64 | Area of the bounding box in square meters |
-| bbox_area_km2 | np.float64 | Area of the bounding box in square kilometers |
-| bbox_centroid | list[float] | Centroid coordinates of bounding box [longitude, latitude] |
-| crs | pyproj.CRS | Coordinate Reference System object for the data |
-| epsg_code | int | EPSG code identifier for the coordinate system |
-| utm_crs | pyproj.CRS | UTM Coordinate Reference System object |
-| providers | numpy.ndarray | Array of data providers (e.g., provincial codes) |
 
 
 ### Usage
@@ -76,3 +51,28 @@ canl.download(query = query, # A query object
               merge = True, # Merge point clouds if true (reccomended only for smaller areas)
               )
 ```
+
+### Query Response Format
+
+All queries return a standard JSON object with the schema shown below. Users can then use the query object to integrate into other applications or to simply download with PyCanLiDAR's downloading functionalities.
+
+| Key Name | Data Type | Description |
+|----------|-----------|-------------|
+| query_area_m2 | np.float64 | Total area of the query region in square meters |
+| query_area_km2 | np.float64 | Total area of the query region in square kilometers |
+| years | list[int] | Years for which LiDAR data is available |
+| file_count | int | Number of LiDAR files found for the query |
+| tile_count | int | Number of LiDAR tiles covering the query area |
+| tile_ids | numpy.ndarray | Array of unique tile identifiers |
+| project_names | numpy.ndarray | Array of project names associated with the LiDAR data |
+| city | str | City name where the query location is situated |
+| address | str | Full address of the query location |
+| urls | list[str] | List of URLs to download the LiDAR point cloud files |
+| bbox | numpy.ndarray | Bounding box coordinates [min_x, min_y, max_x, max_y] |
+| bbox_area_m2 | np.float64 | Area of the bounding box in square meters |
+| bbox_area_km2 | np.float64 | Area of the bounding box in square kilometers |
+| bbox_centroid | list[float] | Centroid coordinates of bounding box [longitude, latitude] |
+| crs | pyproj.CRS | Coordinate Reference System object for the data |
+| epsg_code | int | EPSG code identifier for the coordinate system |
+| utm_crs | pyproj.CRS | UTM Coordinate Reference System object |
+| providers | numpy.ndarray | Array of data providers (e.g., provincial codes) |
