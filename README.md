@@ -48,33 +48,31 @@ All queries return a standard JSON object with the schema shown below. Users can
 | utm_crs | pyproj.CRS | UTM Coordinate Reference System object |
 | providers | numpy.ndarray | Array of data providers (e.g., provincial codes) |
 
-### Bounding Box Query
 
+### Usage
 
 ```python
+## Import CanadaLIDAR Class and initialize an instance
 from canlidar import CanadaLIDAR
 cnl = CanadaLIDAR(project_name = "YOUR-PROJECT-NAME")
-query = cnl.query_bbox(test=True, return_df = False)
-cnl.query_summary(query) # Print a summary of your Query
-```
 
+### Bounding Box Query
+bbox = [-75.70643613,  45.42059443, -75.70122192,  45.42389271]
+query = cnl.query_bbox(bbox= bbox)
 
 ### Address Query
-
-```python
-query = cnl.query_address(address='University of Waterloo, Ontario, Canada', distance_km = 0.5)
-cnl.query_summary(query) # Print a summary of your Query
-```
+query = cnl.query_address(address='University of Waterloo, Ontario, Canada',distance_km = 0.5)
 
 ### City Query
-
-```python
-query = cnl.query_city('Toronto', return_df= False)
+query = cnl.query_city(city = 'Toronto')
 cnl.query_summary(query) # Print a summary of your Query
 ```
 
 ### Downloading LAZ Files
-
 ```python
-canl.download(query)
+canl.download(query = query, # A query object 
+              root = "../laz_files", # Root directory for writing LAZ files
+              clip = True, # Clips Point clouds according to the polygon passed by the query
+              merge = True, # Merge point clouds if true (reccomended only for smaller areas)
+              )
 ```
