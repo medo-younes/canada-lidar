@@ -26,6 +26,9 @@ import re
 from datetime import datetime
 # import pdal 
 # import json
+import urllib.request
+import zipfile
+import os
 
 from urllib.parse import urlparse
 
@@ -53,30 +56,6 @@ def download_s3(s3_url, out_dir):
         print(f'-DOWNLOADED: {file_name}')
 
 
-def get_matching_urls(tile_index_fp, bbox_gdf):    
-    
-    if os.path.exists(tile_index_fp) == False:
-        retrieve_tile_index(tile_index_fp)
-
-    # Read Tiles GeoParquet as GeoDataFrame
-    tile_index_gdf = gpd.read_file(tile_index_fp, bbox=bbox_gdf)
-    # Read Tiles ShapeFile as GeoDataFrame
-    tile_index_gdf['year'] = tile_index_gdf.Project.apply(lambda st: max(re.findall(r'\d+' ,st))).astype(int)
-    latest_year = tile_index_gdf.year.astype(int).max()
-    tiles_gdf_latest = tile_index_gdf[tile_index_gdf.year == latest_year]
-
-    ## Get Name of Project
-    project_name = tiles_gdf_latest.Project.value_counts().reset_index().iloc[0].Project
-    project_id = f'{project_name}/{datetime.now().strftime("%Y%m%d_%H%M%S")}' # Configure unique project ID
-
-    # Spatial join to find only matching tiles
-    matching_urls = tiles_gdf_latest.URL.to_list()
-    print(f'Found {len(matching_urls)} Matching LAZ Files within Bounds for {latest_year}')
-    print(f'PROJECT ID: {project_id}')
-    
-    return tiles_gdf_latest.URL.to_list(), project_id, latest_year
-
-
 ## Download LAZ Files 
 def download_laz_from_s3(s3_urls, laz_dir):
     ## Download Matching LAZ Files from NRCAN S3 Bucket
@@ -86,9 +65,6 @@ def download_laz_from_s3(s3_urls, laz_dir):
             out_dir = laz_dir
         )
 
-import urllib.request
-import zipfile
-import os
 
 def retrieve_tile_index(out_dir):
     if os.path.exists(out_dir) == False:

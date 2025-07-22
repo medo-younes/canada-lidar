@@ -7,6 +7,9 @@ from geopy.geocoders import Nominatim
 from shapely.geometry import Point, box
 from util import find_year
 import pygadm
+from s3_download import download_laz_from_s3
+from pdal_ops import *
+
 class PathConfig():
     def __init__(self):
         self.root = '../'
@@ -48,6 +51,7 @@ class CanadaLIDAR():
         
         return tile_index_gdf
 
+    ## QUERY FUNCTIONS
 
     def query_bbox(self, bbox_gdf=None, bbox=None, year = None, test = False, return_df = False):
         '''
@@ -55,7 +59,6 @@ class CanadaLIDAR():
         bbox = [minx, miny, maxx, maxy]
         
         '''
-
         if bbox_gdf is None or bbox is None:
             test = True
         else:
@@ -66,8 +69,7 @@ class CanadaLIDAR():
 
         # Read Tiles GeoParquet as GeoDataFrame
         tile_index = self.read_tile_index(bbox_gdf=bbox_gdf)
-        
-                
+         
         if len(tile_index) > 0:
             
 
@@ -75,7 +77,7 @@ class CanadaLIDAR():
                 return tile_index
             
             else:
-                return construct_query(tile_index,bbox_gdf, year, return_df)
+                return build_query(tile_index,bbox_gdf, year, return_df)
                 
         else: 
             return None
@@ -115,7 +117,7 @@ class CanadaLIDAR():
             if return_df:
                 return tile_index
             else:
-                return construct_query(tile_index, bbox_gdf, year, return_df)
+                return build_query(tile_index, bbox_gdf, year, return_df)
         else:
             print(f'- Queried address is not within coverage area')
             return None
@@ -126,7 +128,7 @@ class CanadaLIDAR():
             city_gdf = pygadm.Items(name=city)
             city_gdf = city_gdf.set_crs(4326)
             tile_index = self.read_tile_index(bbox_gdf=city_gdf)
-            return construct_query(tile_index, city_gdf, year, return_df)
+            return build_query(tile_index, city_gdf, year, return_df)
         except:
             print(f'{city} is not a valid geogreaphic administrative area')
 
@@ -134,20 +136,37 @@ class CanadaLIDAR():
     def query_tile(self, tile_id):
         return None
     
-    def query_summary(self, query):
-        print('QUERY SUMMARY')
-        print('=======================')
-        print(f'Address: {query['address']}')
-        print(f'Query Area (km2): {query['query_area_km2'].round(2)}')
-        print(f'Bounding Box Area: {query['bbox_area_km2'].round(2)}')
-        print(f'Number of Tiles: {query['tile_count']}')
-        print(f'LAZ File Count: {query['file_count']}')
-        print(f'Available Years: {query['years']}')
+    # DOWNLOAD FUNCTIONS
+    def download(self, query, root ="../laz_files"):
+
+        if os.path.exists(root) == False:
+            os.makedirs(root)
+        
+        out_file = os.path.join(root,  "test.copc.laz")
+        s3_urls = query["urls"]
+        wkt = query['bbox_wkt']
+        stages = [reader('copc', url, polygon = wkt) for url in s3_urls]
+        stages.append(merge())
+        stages.append(writer('las', out_file))
+        pipeline = build_pipeline(stages)
+        pipeline.execute()
+        
+        
+    
+    # def query_summary(self, query):
+    #     print('QUERY SUMMARY')
+    #     print('=======================')
+    #     print(f'Address: {query['address']}')
+    #     print(f'Query Area (km2): {query['query_area_km2'].round(2)}')
+    #     print(f'Bounding Box Area: {query['bbox_area_km2'].round(2)}')
+    #     print(f'Number of Tiles: {query['tile_count']}')
+    #     print(f'LAZ File Count: {query['file_count']}')
+    #     print(f'Available Years: {query['years']}')
 
 
 
 
-def construct_query(tile_index, bbox_gdf= None, year=None, return_df = False): 
+def build_query(tile_index, bbox_gdf= None, year=None, return_df = False): 
 
     if year is not None:
         nearest_year = get_nearest_year(tile_index, year)
@@ -179,6 +198,7 @@ def construct_query(tile_index, bbox_gdf= None, year=None, return_df = False):
                             
                             urls = tile_index.URL.to_list(),
                             bbox = bbox_gdf.total_bounds,
+                            bbox_wkt = bbox_gdf.to_crs(utm_crs).dissolve().geometry[0].wkt,
                             bbox_area_m2 = bbox_gdf.to_crs(utm_crs).area.sum(),
                             bbox_area_km2 = bbox_gdf.to_crs(utm_crs).area.sum()* 0.000001,
                             bbox_centroid = [centroid.x, centroid.y],

@@ -1,5 +1,5 @@
 from canlidar import CanadaLIDAR
-from canelevation import retrieve_tile_index
+from canlidar.s3_download import retrieve_tile_index
 
 
 canl = CanadaLIDAR(project_name = "TEST")
