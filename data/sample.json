@@ -1,0 +1,62 @@
+{
+    "client_project_name": "MY-PROJECT",
+    "query_area_m2": 11979539.999813395,
+    "query_area_km2": 11.979539999813394,
+    "years": [
+        2020
+    ],
+    "file_count": 12,
+    "tile_count": 12,
+    "tile_ids": [
+        "3675031",
+        "3675032",
+        "3675033",
+        "3685031",
+        "3685032",
+        "3685033",
+        "3695031",
+        "3695032",
+        "3695033",
+        "3705031",
+        "3705032",
+        "3705033"
+    ],
+    "project_names": [
+        "Ottawa_Gatineau_2020"
+    ],
+    "city": "Ottawa",
+    "address": "274, Friel Street, Sandy Hill, Rideau-Vanier, Ottawa, Eastern Ontario, Ontario, K1N 6M3, Canada",
+    "urls": [
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3675031.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3675032.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3675033.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3685031.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3685032.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3685033.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3695031.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3695032.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3695033.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3705031.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3705032.copc.laz",
+        "https://canelevation-lidar-point-clouds.s3.ca-central-1.amazonaws.com/pointclouds_nuagespoints/VILLE_OTTAWA/Ottawa_Gatineau_2020/3705033.copc.laz"
+    ],
+    "bbox": [
+        -75.70113407597444,
+        45.41646790707075,
+        -75.66124528922317,
+        45.44190108242568
+    ],
+    "bbox_wkt": "POLYGON ((445575.23628448474 5032267.948873539, 445889.17887283897 5032274.719785778, 446049.9700224077 5032169.055492288, 446353.0308175965 5032014.775869734, 446666.90414777206 5032012.106226333, 447017.70464331424 5031876.412207746, 447452.06612319045 5031493.527850945, 447820.2849682345 5031158.608988987, 447874.6894976612 5030835.769443981, 448023.21723449824 5030388.859046214, 448106.0257661356 5030046.7813149905, 448245.3084011798 5029628.349810096, 448263.4027114707 5029514.391429319, 447996.2755143086 5029431.234338105, 447644.5286983894 5029472.087796235, 447292.7861308795 5029512.9607212, 446675.9930390258 5029717.322844381, 446278.23409316095 5029938.833516953, 445909.7788413132 5030245.459827291, 445673.6482889725 5030446.638555447, 445503.71588838764 5030599.833083141, 445287.2150884085 5030867.222223275, 445231.2098051891 5030990.978350243, 445168.50401779637 5031437.1688118, 445159.65309483855 5031513.097189889, 445200.5099244976 5031835.098599866, 445201.91416450444 5031996.258961368, 445211.67328406376 5032024.615730059, 445269.8136847523 5032147.355771683, 445269.8136847523 5032147.355771683, 445575.23628448474 5032267.948873539))",
+    "bbox_area_m2": 5570953.753196493,
+    "bbox_area_km2": 5.570953753196492,
+    "bbox_centroid": [
+        -75.68192912590787,
+        45.42917543346625
+    ],
+    "crs": "EPSG:4617",
+    "epsg_code": 4617,
+    "utm_crs": "EPSG:32618",
+    "providers": [
+        "VILLE_OTTAWA"
+    ]
+}

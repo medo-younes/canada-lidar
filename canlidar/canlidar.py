@@ -18,12 +18,19 @@ class PathConfig():
         self.test_bbox_fp = os.path.join(self.data, 'test_bbox.geojson')
         self.test_poly_fp = os.path.join(self.data, 'test_poly.geojson')
 
+        self.lidar_data =  os.path.join(self.root, 'lidar_data')
+
 class CanadaLiDAR():
     def __init__(self, project_name):
         self.project_name = project_name
         self.pt = PathConfig()
         self.tile_index_crs = "EPSG:4617"
 
+        self.out_folder = os.path.join(self.pt.lidar_data, self.project_name)
+        if os.path.exists(self.out_folder) == False:
+            os.makedirs(self.out_folder)
+
+    
 
     def read_tile_index(self, bbox_gdf = None):
         if bbox_gdf is not None:
@@ -199,21 +206,20 @@ class CanadaLiDAR():
                                 years = sorted(years),
                                 file_count = len(tile_index),
                                 tile_count = len(tile_index.Tile_name.unique()),
-                                tile_ids = tile_index.Tile_name.unique(),
-                                project_names = tile_index.Project.unique(),
+                                tile_ids = list(tile_index.Tile_name.unique()),
+                                project_names = list(tile_index.Project.unique()),
                                 city = location.raw.get('address').get('city'),
                                 address = location.address,
-                                
                                 urls = tile_index.URL.to_list(),
-                                bbox = bbox_gdf.total_bounds,
+                                bbox = list(bbox_gdf.total_bounds),
                                 bbox_wkt = bbox_gdf.to_crs(utm_crs).dissolve().geometry[0].wkt,
                                 bbox_area_m2 = bbox_gdf.to_crs(utm_crs).area.sum(),
                                 bbox_area_km2 = bbox_gdf.to_crs(utm_crs).area.sum()* 0.000001,
                                 bbox_centroid = [centroid.x, centroid.y],
-                                crs = tile_index.crs,
+                                crs = str(tile_index.crs),
                                 epsg_code = tile_index.crs.to_epsg(),
-                                utm_crs = utm_crs,
-                                providers = tile_index.Provider.unique()
+                                utm_crs = str(utm_crs),
+                                providers = list(tile_index.Provider.unique())
                                 
                             )
         else:
@@ -238,51 +244,10 @@ class CanadaLiDAR():
         return gpd.read_file(self.pt.test_bbox_fp)
 
 
-
-
-def build_query(tile_index, bbox_gdf= None, year=None, return_df = False): 
-
-    if year is not None:
-        nearest_year = get_nearest_year(tile_index, year)
-        tile_index = tile_index[tile_index.year == str(nearest_year)]
-
-    utm_crs = bbox_gdf.estimate_utm_crs()
-    tile_index_local_utm = tile_index.to_crs(utm_crs)
-    
-
-
-    if return_df:
-        return tile_index
-    else:
-                ## Reverse Geocode Query
-        centroid = bbox_gdf.to_crs(4326).centroid.iloc[0]
-        geolocator = Nominatim(user_agent="canada-lidar")
-        location = geolocator.reverse(f"{centroid.y}, {centroid.x}")
-        years = [int(x) for x in list(tile_index.year.unique()) if x is not None]
-        return  dict(       
-                            query_area_m2 = tile_index_local_utm.area.sum(), 
-                            query_area_km2 = tile_index_local_utm.area.sum() * 0.000001,
-                            years = sorted(years),
-                            file_count = len(tile_index),
-                            tile_count = len(tile_index.Tile_name.unique()),
-                            tile_ids = tile_index.Tile_name.unique(),
-                            project_names = tile_index.Project.unique(),
-                            city = location.raw.get('address').get('city'),
-                            address = location.address,
-                            
-                            urls = tile_index.URL.to_list(),
-                            bbox = bbox_gdf.total_bounds,
-                            bbox_wkt = bbox_gdf.to_crs(utm_crs).dissolve().geometry[0].wkt,
-                            bbox_area_m2 = bbox_gdf.to_crs(utm_crs).area.sum(),
-                            bbox_area_km2 = bbox_gdf.to_crs(utm_crs).area.sum()* 0.000001,
-                            bbox_centroid = [centroid.x, centroid.y],
-                            crs = tile_index.crs,
-                            epsg_code = tile_index.crs.to_epsg(),
-                            utm_crs = utm_crs,
-                            providers = tile_index.Provider.unique()
-                            
-                        )
-
+    def save_query(self, query):
+        
+        with open(os.path.join(self.out_folder, f"{self.project_name}_query.json") ,'w' ) as out:
+            json.dump(query, out)
 
 
 def get_nearest_year(tile_index, year):

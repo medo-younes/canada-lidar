@@ -79,6 +79,8 @@ query.explore(column='year')
 
 All queries return a standard JSON object with the schema shown below. Users can then use the query object to integrate into other applications or to simply download with PyCanLiDAR's downloading functionalities.
 
+You can view a sample of the JSON respoonse [HERE](data/sample.json).
+
 | Key Name | Data Type | Description |
 |----------|-----------|-------------|
 | query_area_m2 | np.float64 | Total area of the query region in square meters |

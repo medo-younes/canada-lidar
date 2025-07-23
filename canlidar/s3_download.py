@@ -70,7 +70,7 @@ def retrieve_tile_index(out_dir):
     if os.path.exists(out_dir) == False:
             os.mkdir(out_dir)
     url = 'https://canelevation-lidar-point-clouds.s3-ca-central-1.amazonaws.com/pointclouds_nuagespoints/Index_LiDARtiles_tuileslidar.zip'
-    filename = os.path.join(out_dir, 'file.zip')
+    filename = os.path.join(out_dir, 'tile_index.zip')
 
 
     urllib.request.urlretrieve(url, filename)
