@@ -15,16 +15,14 @@ class PathConfig():
         self.root = '../'
         self.data = os.path.join(self.root, 'data')
         self.tile_index_fp = os.path.join(self.data, 'tile_index', 'tile_index.shp')
-
         self.test_bbox_fp = os.path.join(self.data, 'test_bbox.geojson')
+        self.test_poly_fp = os.path.join(self.data, 'test_poly.geojson')
 
-class CanadaLIDAR():
+class CanadaLiDAR():
     def __init__(self, project_name):
         self.project_name = project_name
         self.pt = PathConfig()
         self.tile_index_crs = "EPSG:4617"
-
-        
 
 
     def read_tile_index(self, bbox_gdf = None):
@@ -34,7 +32,6 @@ class CanadaLIDAR():
 
         tile_index_gdf = gpd.read_file(self.pt.tile_index_fp, bbox=bbox_gdf)
         
-
         # Get Project Year
         project_year = tile_index_gdf.Project.apply(lambda x: [v for v in x.split("_") if v.isdigit()])
         tile_index_gdf['project_year'] = project_year.apply(lambda x: x[0] if len(x) > 0 else None)
@@ -52,34 +49,39 @@ class CanadaLIDAR():
         return tile_index_gdf
 
     ## QUERY FUNCTIONS
-
-    def query_bbox(self, bbox_gdf=None, bbox=None, year = None, test = False, return_df = False):
+    def query_bbox(self, bbox= None,year = None, test = False, return_df = False):
         '''
-        bbox_gdf: GeoDataFrame of bounding box
+       
         bbox = [minx, miny, maxx, maxy]
         
         '''
-        if bbox_gdf is None or bbox is None:
-            test = True
+        if test or bbox is None:
+            gdf = gpd.read_file(self.pt.test_bbox_fp)
         else:
-            bbox_gdf = bbox_gdf.to_crs(self.tile_index_crs)
+            gdf = gpd.GeoDataFrame(geometry = [box(*bbox)],crs = 4326)
+        return self.query_polygon(gdf, year, test, return_df)
 
-        if test:
-            bbox_gdf = gpd.read_file(self.pt.test_bbox_fp)
-
+    def query_polygon(self, gdf=None,year = None, test = False, return_df = False):
+        '''
+        gdf: GeoDataFrame of Polygon or MultiPolygon
+        '''
+        if test or gdf is None:
+            gdf = gpd.read_file(self.pt.test_poly_fp)
+        else:
+            gdf = gdf.to_crs(self.tile_index_crs)
+      
         # Read Tiles GeoParquet as GeoDataFrame
-        tile_index = self.read_tile_index(bbox_gdf=bbox_gdf)
+        tile_index = self.read_tile_index(bbox_gdf=gdf)
          
         if len(tile_index) > 0:
-            
-
             if return_df:
                 return tile_index
-            
             else:
-                return build_query(tile_index,bbox_gdf, year, return_df)
+                return self.build_query(gdf, year, return_df)
                 
         else: 
+            print('- No Tiles have matched your query')
+            
             return None
 
         
@@ -106,21 +108,8 @@ class CanadaLIDAR():
             else:
                 print('Geocode Query Failed, adjust input address')
 
-            
-
-        ## Query Tile Index
-        tile_index = self.read_tile_index(bbox_gdf=bbox_gdf)
-        within_bounds = len(tile_index) > 0
-
-        # Check if query is within bounds of tile index
-        if within_bounds:
-            if return_df:
-                return tile_index
-            else:
-                return build_query(tile_index, bbox_gdf, year, return_df)
-        else:
-            print(f'- Queried address is not within coverage area')
-            return None
+        return self.build_query(bbox_gdf, year, return_df)
+     
 
     
     def query_city(self, city, year= None, test = False, return_df= False):
@@ -128,40 +117,125 @@ class CanadaLIDAR():
             city_gdf = pygadm.Items(name=city)
             city_gdf = city_gdf.set_crs(4326)
             tile_index = self.read_tile_index(bbox_gdf=city_gdf)
-            return build_query(tile_index, city_gdf, year, return_df)
+       
+    
+            return self.build_query(city_gdf, year, return_df)
         except:
-            print(f'{city} is not a valid geogreaphic administrative area')
+            print(f'{city} is not a valid geographic administrative area')
 
     
     def query_tile(self, tile_id):
         return None
     
     # DOWNLOAD FUNCTIONS
-    def download(self, query, root ="../laz_files"):
-
-        if os.path.exists(root) == False:
-            os.makedirs(root)
+    def download(self, query, merge_all = False, clip = False, root = "../lidar_data"):
         
-        out_file = os.path.join(root,  "test.copc.laz")
+        out_folder = os.path.join(root, self.project_name)
+        if os.path.exists(out_folder) == False:
+            os.makedirs(out_folder)
+        
+        
+        out_files = [os.path.join(out_folder, url.split('/')[-1]) for url in query['urls']]
+        
         s3_urls = query["urls"]
         wkt = query['bbox_wkt']
-        stages = [reader('copc', url, polygon = wkt) for url in s3_urls]
-        stages.append(merge())
-        stages.append(writer('las', out_file))
+
+        # Clip and Merge All Point Clouds
+        if clip and merge_all:
+            out_file = os.path.join(out_folder,  f"{self.project_name}_merged.copc.laz")
+            stages = [reader('copc', url, polygon = wkt) for url in s3_urls]
+            stages.append(merge())
+            stages.append(writer('las', out_file))
+
+        # Clip and download individual LAZ files
+        elif clip and merge_all == False:
+            stages = list()
+            for url, out_file in zip(s3_urls, out_files):
+                stages.append(reader('copc', url, polygon = wkt))
+                stages.append(writer('las', out_file))
+        
+        # Merge all LAZ Files - no clipping
+        elif clip == False and merge_all:
+            out_file = os.path.join(out_folder,  f"{self.project_name}_merged.copc.laz")
+            stages = [reader('copc', url) for url in s3_urls]
+            stages.append(merge())
+            stages.append(writer('las', out_file))
+
+        # No Clip and No Merge - download with Boto3
+        else:
+            download_laz_from_s3(s3_urls, out_folder)
+
+        ## Build PDAL Pipeline and Execute
         pipeline = build_pipeline(stages)
         pipeline.execute()
         
+    def build_query(self, bbox_gdf= None, year=None, return_df = False): 
+
+        ## Query Tile Index
+        tile_index = self.read_tile_index(bbox_gdf=bbox_gdf)
+        within_bounds = len(tile_index) > 0
+
+        if within_bounds:
+            if year is not None:
+                nearest_year = get_nearest_year(tile_index, year)
+                tile_index = tile_index[tile_index.year == str(nearest_year)]
+
+            utm_crs = bbox_gdf.estimate_utm_crs()
+            tile_index_local_utm = tile_index.to_crs(utm_crs)
+
+            if return_df:
+                return tile_index
+            else:
+                        ## Reverse Geocode Query
+                bbox_gdf_4326 = bbox_gdf.to_crs(4326)
+                centroid = bbox_gdf_4326.centroid.iloc[0]
+                geolocator = Nominatim(user_agent="canada-lidar")
+                location = geolocator.reverse(f"{centroid.y}, {centroid.x}")
+                years = [int(x) for x in list(tile_index.year.unique()) if x is not None]
+                return  dict(       
+                                client_project_name = self.project_name,
+                                query_area_m2 = tile_index_local_utm.area.sum(), 
+                                query_area_km2 = tile_index_local_utm.area.sum() * 0.000001,
+                                years = sorted(years),
+                                file_count = len(tile_index),
+                                tile_count = len(tile_index.Tile_name.unique()),
+                                tile_ids = tile_index.Tile_name.unique(),
+                                project_names = tile_index.Project.unique(),
+                                city = location.raw.get('address').get('city'),
+                                address = location.address,
+                                
+                                urls = tile_index.URL.to_list(),
+                                bbox = bbox_gdf.total_bounds,
+                                bbox_wkt = bbox_gdf.to_crs(utm_crs).dissolve().geometry[0].wkt,
+                                bbox_area_m2 = bbox_gdf.to_crs(utm_crs).area.sum(),
+                                bbox_area_km2 = bbox_gdf.to_crs(utm_crs).area.sum()* 0.000001,
+                                bbox_centroid = [centroid.x, centroid.y],
+                                crs = tile_index.crs,
+                                epsg_code = tile_index.crs.to_epsg(),
+                                utm_crs = utm_crs,
+                                providers = tile_index.Provider.unique()
+                                
+                            )
+        else:
+            return None
         
     
-    # def query_summary(self, query):
-    #     print('QUERY SUMMARY')
-    #     print('=======================')
-    #     print(f'Address: {query['address']}')
-    #     print(f'Query Area (km2): {query['query_area_km2'].round(2)}')
-    #     print(f'Bounding Box Area: {query['bbox_area_km2'].round(2)}')
-    #     print(f'Number of Tiles: {query['tile_count']}')
-    #     print(f'LAZ File Count: {query['file_count']}')
-    #     print(f'Available Years: {query['years']}')
+    def query_summary(self, query):
+        print('=======================')
+        print('QUERY SUMMARY')
+        print('=======================')
+        print(f'Address: {query["address"]}')
+        print(f'Query Area (km2): {query["query_area_km2"].round(2)}')
+        print(f'Bounding Box Area: {query["bbox_area_km2"].round(2)}')
+        print(f'Number of Tiles: {query["tile_count"]}')
+        print(f'LAZ File Count: {query["file_count"]}')
+        print(f'Available Years: {query["years"]}')
+
+    def test_polygon(self):
+        return gpd.read_file(self.pt.test_poly_fp)
+    
+    def test_bbox(self):
+        return gpd.read_file(self.pt.test_bbox_fp)
 
 
 
